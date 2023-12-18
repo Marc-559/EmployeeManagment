@@ -1,0 +1,104 @@
+﻿@page "/worktime"
+
+@using EmployeeManagment.Data.DTOs
+@using EmployeeManagment.Data.Service
+@inject IWorkingTimeService workingTimeService
+@inject NavigationManager navigationManager
+
+@rendermode InteractiveServer
+
+
+
+<h3>WorkTimeView</h3>
+
+@if (workingTimeDTOs == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Project Name</th>
+                <th>Timestamp Begining</th>
+                <th>Timestamp End</th>
+                <th>Notes</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var wt in workingTimeDTOs)
+            {
+                <tr>
+                    <td>@wt.Id</td>
+                    <td>@wt.Project.Name</td>
+                    <td>@wt.TimestampBegin</td>
+                    <td>@wt.TimestampEnd</td>
+                    <td>@wt.Description</td>
+                    <td align="right">
+                        <button class="btn btn-primary" @onclick="() => EditWorkTime(wt.Id)">
+                            Edit
+                        </button>
+                        <button class="btn btn-primary" @onclick="() => RemoveWorkTime(wt.Id)">
+                            Remove
+                        </button> 
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button class="btn btn-primary" @onclick="AddWorkTime">
+        Add
+    </button>
+
+    <WorkTimeAddEdit IsVisible="showModalAddEdit" selectedWorkTime="workingTimeDTO" CloseCallback="ModalCloseCallback" />
+}
+
+@code {
+
+    private List<WorkingTimeDTO>? workingTimeDTOs;
+    private WorkingTimeDTO? workingTimeDTO;
+    private List<WorkingTimeDTO>? workingTimes;
+    private bool showModalAddEdit = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        workingTimeDTOs = await workingTimeService.GetAllWorkingTimeDTOsAsync();
+    }
+
+    private void AddWorkTime()
+    {
+        workingTimeDTO = new();
+
+        workingTimeDTO.TimestampBegin = DateOnly.FromDateTime(DateTime.Now);
+        workingTimeDTO.TimestampEnd = DateOnly.FromDateTime(DateTime.Now);
+
+        showModalAddEdit = true;
+        StateHasChanged();
+    }
+
+     private async void EditWorkTime(int? workingTimeId)
+     {
+         workingTimeDTO = await workingTimeService.GetWorkingTimeDTOByIdAsync(workingTimeId);
+         showModalAddEdit = true;
+         StateHasChanged();
+     }
+
+    private async void RemoveWorkTime(int? workingTimeId)
+     {
+        await workingTimeService.RemoveWorkingTimeAsync(await workingTimeService.GetWorkingTimeByIdAsync(workingTimeId));
+         StateHasChanged();
+        navigationManager.NavigateTo(navigationManager.Uri, forceLoad: true);
+     }
+
+    private void ModalCloseCallback()
+    {
+        showModalAddEdit = false;
+        StateHasChanged();
+    }
+
+}

@@ -1,0 +1,55 @@
+﻿@page "/Employee"
+
+@using EmployeeManagment.Data
+@using EmployeeManagment.Data.Service
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavManager
+@inject IApplicationUserService applicationUserService
+
+<h3>EmployeePage </h3>
+
+@if (applicationUsers == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in applicationUsers)
+            {
+                <tr>
+                    <td>@user.Id</td>
+                    <td>@user.Email</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private List<ApplicationUser> applicationUsers = new();
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync(); //Getting current Username
+
+        //If GetUserRoleId method gives back anything other than 2 (Admin) it navigates you to the Home screen
+        //If the returned Id is 2 then you are an Admin and all Users are shown with UserId and Email
+        if(await applicationUserService.GetUserRoleIdFromUser(authState.User.Identity.Name) == "2") 
+        {
+            applicationUsers = await applicationUserService.GetAllUsers();
+        }
+        else
+        {
+            NavManager.NavigateTo("/");
+        }
+    }
+}

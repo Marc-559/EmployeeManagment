@@ -1,0 +1,134 @@
+﻿@page "/"
+@using EmployeeManagment.Data
+@using EmployeeManagment.Data.DTOs
+@using EmployeeManagment.Data.Service
+@using Microsoft.AspNetCore.Authorization
+@rendermode InteractiveServer
+
+@inject IProjectService projectService
+@inject IWorkingTimeService workingTimeService
+@inject NavigationManager navigationManager
+
+@attribute [Authorize]
+
+<PageTitle>Home</PageTitle>
+
+
+@if (projectDTOs == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Projectname</th>
+                <th>Clientname</th>
+                <th>Notes</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in projectDTOs)
+            {
+                <tr>
+                    <td>@p.Id</td>
+                    <td>@p.Name</td>
+                    <td>@p.ClientName</td>
+                    <td>@p.Description</td>
+                    <td align="right">
+                        <button class="btn btn-primary" @onclick="() => ClickProject(p.Id)">
+                            Select
+                        </button>
+                        <button class="btn btn-primary" @onclick="() => EditProject(p.Id)">
+                            Edit
+                        </button>
+                        <button class="btn btn-primary" @onclick="() => RemoveProject(p.Id)">
+                            Remove
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button class="btn btn-primary" @onclick="AddProject">
+        Add
+    </button>
+
+    <ProjectDetailsView workingTimes="workingTimes" />
+
+    <ProjectAddEdit IsVisible="showModalAddEdit" selectedProject="projectDTO" CloseCallback="ModalCloseCallback" />
+}
+
+@code {
+    private List<ProjectDTO>? projectDTOs;
+    private ProjectDTO? projectDTO;
+    private List<WorkingTime>? workingTimes;
+    private bool showModalAddEdit;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        projectDTOs = await projectService.GetAllProjectDTOsAsync(); //Loads all ProjectDTOs in list
+    }
+
+    /// <summary>
+    /// When ClickProject is called it gets the workingTimes of the clicked Project. (projectDetails)
+    /// </summary>
+    /// <param name="projectId"></param>
+    private async void ClickProject(int? projectId)
+    {
+        workingTimes = await workingTimeService.GetWorkingTimeWithProjectId(projectId);
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// When Addproject is called a new projectDTO gets created so its's not null.
+    /// Then the showMoadalAddEdit is set to true so the ProjectAddEditViw is shown.
+    /// </summary>
+    private void AddProject()
+    {
+        projectDTO = new();
+        showModalAddEdit = true;
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// When EditProject is called the clicked the project id is given, with that id a request is made 
+    /// to get the clickedProjectDTO.
+    /// Then the showMoadalAddEdit is set to true so the ProjectAddEditViw is shown.
+    /// </summary>
+    /// <param name="projectId"></param>
+    private async void EditProject(int? projectId)
+    {
+        projectDTO = await projectService.GetProjectDTOByIdAsync(projectId);
+        showModalAddEdit = true;
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// When removeproject is called the clicked the projectId is given, with that id a request is made
+    /// to get the clickedProjectDTO.
+    /// Then it is instantly deleted and an forcenavigation is made to the same page so it refreshes.
+    /// </summary>
+    /// <param name="projectId"></param>
+    private async void RemoveProject(int? projectId)
+    {
+        await projectService.RemoveProjectAsync(await projectService.GetProjectById(projectId));
+        StateHasChanged();
+        navigationManager.NavigateTo(navigationManager.Uri, forceLoad: true);
+    }
+
+    /// <summary>
+    /// This method is for closing the Modals.
+    /// </summary>
+    private void ModalCloseCallback()
+    {
+        showModalAddEdit = false;
+        StateHasChanged();
+    }
+}

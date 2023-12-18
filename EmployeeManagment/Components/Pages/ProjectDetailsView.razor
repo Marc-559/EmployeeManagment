@@ -1,0 +1,38 @@
+﻿@using EmployeeManagment.Data
+@using EmployeeManagment.Data.Service
+
+@inject IWorkingTimeService workingTimeService
+
+@if (workingTimes == null)
+{
+
+}
+else
+{
+    <h3>ProjectDetailsView</h3>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Working Times</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in workingTimes)
+            {
+                <tr>
+                    <td>@item.ApplicationUser.Email</td>
+                    <td>@item.Project.Name</td>
+                    <td>@item.TimestampBegin</td>
+                    <td>@item.TimestampEnd</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public List<WorkingTime>? workingTimes { get; set; }
+
+}

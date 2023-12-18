@@ -1,0 +1,122 @@
+﻿@using EmployeeManagment.Data
+@using EmployeeManagment.Data.DTOs
+@using EmployeeManagment.Data.Service
+
+@inject IApplicationUserService applicationUserService
+@inject IProjectService projectService
+@inject IWorkingTimeService workingTimeService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager navigationManager
+
+@rendermode InteractiveServer
+
+
+
+@if (IsVisible)
+{
+
+    <h3>Add Worktime</h3>
+
+
+    <div class="modal show" role="dialog" style="display:block">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">New Project</h2>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@selectedWorkTime" OnValidSubmit="ValidScreeningSubmitted" OnInvalidSubmit="InvalidScreeningSubmitted">
+                        <DataAnnotationsValidator />
+
+                        <div class="list-group mb-4">
+                            <label for="staticEmail" class="col-sm-2 col-form-label">Email</label>
+                            <div class="col-sm-10">
+                                <input type="text" readonly class="form-control-plaintext" id="@currentUser.Id" value="@currentUser.Email">
+                            </div>
+                        </div>
+                        <div class="list-group mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" @bind-value="selectedWorkTime.TimestampBegin" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">End Date</label>
+                                <input type="date" @bind-value="selectedWorkTime.TimestampEnd" class="form-control">
+                            </div>
+                        </div>
+                        <div class="list-group mb-4">
+                            <label for="inputState" class="form-label">Project</label>
+                            <select @bind="selectedWorkTime.SelectedProjectId" id="Projects" class="form-select w-50">
+                                <option value=""></option>
+
+                                @foreach (var projectDTO in projectDTOs)
+                                {
+                                    <option value="@projectDTO.Id">@projectDTO.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="list-group mb-5">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control w-50 h-75" @bind="selectedWorkTime.Description" id="exampleFormControlTextarea1" rows="3" placeholder="Description"></textarea>
+                        </div>
+
+                        <div class="modal-footer">
+                            <input type="submit" class="btn btn-primary" value="Save" />
+                            <button class="btn btn-secondary" data-dismiss="modal" @onclick="CloseClick">Close</button>
+                        </div>
+                    </EditForm>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public WorkingTimeDTO selectedWorkTime { get; set; }
+
+    [Parameter]
+    public EventCallback CloseCallback { get; set; }
+
+    private List<ProjectDTO> projectDTOs = new();
+    private ApplicationUser currentUser = new();
+    private Project selectedproject = new();
+
+    protected async override Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        currentUser = await applicationUserService.GetCurrentUser(authState.User.Identity.Name);
+        projectDTOs = await projectService.GetAllProjectDTOsAsync();
+    }
+
+    private async Task ValidScreeningSubmitted(EditContext editContext)
+    {
+        if (selectedWorkTime.Id == null)
+        {
+            selectedproject = await projectService.GetProjectById(selectedWorkTime.SelectedProjectId);
+
+            await workingTimeService.AddWorkingTimeAsync(selectedWorkTime, currentUser, selectedproject);
+        }
+        else
+        {
+            await workingTimeService.EditWorkingTimeAsync(selectedWorkTime);
+        }
+    }
+
+    void InvalidScreeningSubmitted(EditContext editContext)
+    {
+
+    }
+
+    private async void CloseClick()
+    {
+        await CloseCallback.InvokeAsync();
+        navigationManager.NavigateTo(navigationManager.Uri, forceLoad: true);
+    }
+}
