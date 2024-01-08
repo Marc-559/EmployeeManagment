@@ -89,12 +89,19 @@
     protected async override Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync(); //Get authstate
 
-        currentUser = await applicationUserService.GetCurrentUser(authState.User.Identity.Name);
-        projectDTOs = await projectService.GetAllProjectDTOsAsync();
+        currentUser = await applicationUserService.GetCurrentUser(authState.User.Identity.Name); //Get User with authstate
+        projectDTOs = await projectService.GetAllProjectDTOsAsync(); // Get all ProjectDTOs
     }
 
+    /// <summary>
+    /// If the html inputs give back no error this method is called.
+    /// If the Parameter (WorktimeId) of the modal is null a new Worktime is added.
+    /// Else the selectedWorktime is edited.
+    /// </summary>
+    /// <param name="editContext"></param>
+    /// <returns></returns>
     private async Task ValidScreeningSubmitted(EditContext editContext)
     {
         if (selectedWorkTime.Id == null)
@@ -109,11 +116,18 @@
         }
     }
 
+    /// <summary>
+    /// Method to handle errors in the html inputs
+    /// </summary>
+    /// <param name="editContext"></param>
     void InvalidScreeningSubmitted(EditContext editContext)
     {
 
     }
 
+    /// <summary>
+    /// Closes the Modal and does a force Refresh
+    /// </summary>
     private async void CloseClick()
     {
         await CloseCallback.InvokeAsync();

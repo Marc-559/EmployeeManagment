@@ -64,12 +64,20 @@ else
     private List<WorkingTimeDTO>? workingTimes;
     private bool showModalAddEdit = false;
 
+    /// <summary>
+    /// Gets all WorkTimeDTOs
+    /// </summary>
+    /// <returns></returns>
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         workingTimeDTOs = await workingTimeService.GetAllWorkingTimeDTOsAsync();
     }
 
+    /// <summary>
+    /// Creates a new instance of WorkTime so it's not null then and sets the timestamps to today so they are shown correctly in
+    /// the modal. Then the modal visibility is set to true
+    /// </summary>
     private void AddWorkTime()
     {
         workingTimeDTO = new();
@@ -81,20 +89,31 @@ else
         StateHasChanged();
     }
 
-     private async void EditWorkTime(int? workingTimeId)
-     {
-         workingTimeDTO = await workingTimeService.GetWorkingTimeDTOByIdAsync(workingTimeId);
-         showModalAddEdit = true;
-         StateHasChanged();
-     }
+    /// <summary>
+    /// Gets the chosen WorkTIme with the workTimeId and sets the modal visibility to true
+    /// </summary>
+    /// <param name="workingTimeId"></param>
+    private async void EditWorkTime(int? workingTimeId)
+    {
+        workingTimeDTO = await workingTimeService.GetWorkingTimeDTOByIdAsync(workingTimeId);
+        showModalAddEdit = true;
+        StateHasChanged();
+    }
 
+    /// <summary>
+    /// Removes the chosen Worktime with the id and then force refreshes
+    /// </summary>
+    /// <param name="workingTimeId"></param>
     private async void RemoveWorkTime(int? workingTimeId)
-     {
+    {
         await workingTimeService.RemoveWorkingTimeAsync(await workingTimeService.GetWorkingTimeByIdAsync(workingTimeId));
-         StateHasChanged();
+        StateHasChanged();
         navigationManager.NavigateTo(navigationManager.Uri, forceLoad: true);
-     }
+    }
 
+    /// <summary>
+    /// Closes the modal
+    /// </summary>
     private void ModalCloseCallback()
     {
         showModalAddEdit = false;

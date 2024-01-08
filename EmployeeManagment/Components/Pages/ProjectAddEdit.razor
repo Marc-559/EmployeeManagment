@@ -56,16 +56,22 @@
     [Parameter]
     public EventCallback CloseCallback { get; set; }
 
+    /// <summary>
+    /// Closes the modal and does a force refresh
+    /// </summary>
     private async void CloseClick()
     {
         await CloseCallback.InvokeAsync();
         navigationManager.NavigateTo(navigationManager.Uri, forceLoad: true);
     }
 
+    /// <summary>
+    /// If id is already set update method is called
+    /// If id is not set a new Project is created 
+    /// </summary>
+    /// <param name="editContext"></param>
     void ValidScreeningSubmitted(EditContext editContext)
     {
-
-
         if (selectedProject.Id == null)
         {
             projectService.AddProjectAsync(selectedProject);
@@ -76,6 +82,10 @@
         }
     }
 
+    /// <summary>
+    /// Method to handle errors in the html inputs
+    /// </summary>
+    /// <param name="editContext"></param>
     void InvalidScreeningSubmitted(EditContext editContext)
     {
 
